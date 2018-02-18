@@ -4,8 +4,14 @@ import {connect} from 'react-redux';
 import {withStyles} from 'material-ui/styles';
 import firebase from "firebase";
 
-export const signIn = provider => async dispatch => {
-    const provider = new firebase.auth.GoogleAuthProvider();
+export const signIn = prov => async dispatch => {
+    let provider;
+
+    if(prov === 'google') {
+        provider = new firebase.auth.GoogleAuthProvider();
+    } else if(prov === 'facebook') {
+        provider = new firebase.auth.FacebookAuthProvider();
+    }
 
     try {
         let result = await firebase.auth().signInWithPopup(provider);
@@ -33,7 +39,7 @@ class SignIn extends Component {
     }
 
     _onSignIn(provider) {
-        this.props.dispatch(signIn('google'));
+        this.props.dispatch(signIn(provider));
     }
 
     render() {
@@ -42,6 +48,7 @@ class SignIn extends Component {
         return (
             <div>
                 <div onClick={() => this._onSignIn('google')}>Sign in with google</div>
+                <div onClick={() => this._onSignIn('facebook')}>Sign in with facebook</div>
             </div>
         );
     }
