@@ -13,7 +13,7 @@ import {
     Button, Card, CardContent, CardMedia, Dialog, DialogActions, DialogContent, DialogTitle, IconButton, Menu, MenuItem,
     TextField
 } from "material-ui";
-import {DatePicker} from 'material-ui-pickers'
+import {DatePicker} from 'material-ui-pickers';
 import AddIcon from 'material-ui-icons/Add';
 import MenuIcon from 'material-ui-icons/Menu';
 
@@ -41,7 +41,7 @@ export const addArrangement = (title, composer) => async (dispatch, getState) =>
 
 export const addSetlist = (title, date) => async (dispatch, getState) => {
     let userId = getState().default.user.id;
-    let bandId = getState().default.router.pathname.split('/')[2];
+    let bandId = getState().router.location.pathname.split('/')[2];
     try {
         const setlist = {
             title: title,
@@ -69,6 +69,13 @@ export const getBandDetail = bandId => async dispatch => {
     band.arrangements = await Promise.all(snapshot.docs.map(async doc => {
         const arrDoc = await doc.data().ref.get();
         return {id: arrDoc.id, ...arrDoc.data()};
+    }));
+
+    let snapshot_set = await firebase.firestore().collection(`bands/${bandId}/setlists`).get();
+
+    band.setlists = await Promise.all(snapshot_set.docs.map(async doc => {
+        const setDoc = await doc.data().ref.get();
+        return {id: setDoc.id, ...setDoc.data()};
     }));
 
     dispatch({type: 'BAND_FETCH_RESPONSE', band: band})
@@ -115,7 +122,7 @@ class Band extends Component {
         setlistDate: Date.now(),
         arrangementTitle: '',
         arrangementComposer: '',
-        setlistName: ''
+        setlistTitle: ''
     };
 
     requestBandDetail() {
@@ -158,7 +165,7 @@ class Band extends Component {
                 this.props.dispatch(addArrangement(this.state.arrangementTitle, this.state.arrangementComposer));
                 break;
             case 'setlist':
-                // this.props.dispatch(joinBand(this.state.bandCode));
+                this.props.dispatch(addSetlist(this.state.setlistTitle, this.state.setlistDate));
                 break;
             default:
                 break;
@@ -177,8 +184,10 @@ class Band extends Component {
 
     render() {
         const {anchorEl, arrangementDialogOpen, setlistDialogOpen, setlistDate} = this.state;
-        const {classes, band={arrangements: []}} = this.props;
+        const {classes, band={arrangements: [], setlists: []}} = this.props;
 
+        //Done for testing purposes, need to find new way of doing it...
+        const bId = this.props.pathname.split('/')[2];
         return (
             <div className={classes.root}>
                 <AppBar position="static">
@@ -204,8 +213,8 @@ class Band extends Component {
                 </AppBar>
                 <div className={classes.banner}></div>
                 <div className={classes.grid}>
-                    {band.arrangements.map((arr, index) =>
-                        <Card key={index} className={classes.card} onClick={() => this.props.dispatch(push(`/arrangement/${arr.id}`))} elevation={1}>
+                    {band.setlists.map((set, index) =>
+                        <Card key={index} className={classes.card} onClick={() => this.props.dispatch(push(`/setlist/${bId}/${set.id}`))} elevation={1}>
                             <CardMedia
                                 className={classes.media}
                                 image="https://previews.123rf.com/images/scanrail/scanrail1303/scanrail130300051/18765489-musical-concept-background-macro-view-of-white-score-sheet-music-with-notes-with-selective-focus-eff.jpg"
@@ -213,10 +222,10 @@ class Band extends Component {
                             />
                             <CardContent>
                                 <Typography variant="headline" component="h2">
-                                    {arr.title}
+                                    {set.title}
                                 </Typography>
                                 <Typography component="p">
-                                    {arr.composer}
+                                    
                                 </Typography>
                             </CardContent>
                         </Card>
