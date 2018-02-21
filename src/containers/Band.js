@@ -112,7 +112,7 @@ class Band extends Component {
         anchorEl: null,
         arrangementDialogOpen: false,
         setlistDialogOpen: false,
-        setlistDate: '',
+        setlistDate: Date.now(),
         arrangementTitle: '',
         arrangementComposer: '',
         setlistName: ''
@@ -251,7 +251,7 @@ class Band extends Component {
                         />
                         <DatePicker
                             value={setlistDate}
-                            onChange={date => this.setState({setlistDate: date})}
+                            onChange={date => {this.setState({setlistDate: date._d}); console.log(date)} }
                         />
                     </DialogContent>
                     <DialogActions>
