@@ -13,6 +13,7 @@ import {
     Button, Card, CardContent, CardMedia, Dialog, DialogActions, DialogContent, DialogTitle, IconButton, Menu, MenuItem,
     TextField
 } from "material-ui";
+import {DatePicker} from 'material-ui-pickers'
 import AddIcon from 'material-ui-icons/Add';
 import MenuIcon from 'material-ui-icons/Menu';
 
@@ -37,6 +38,25 @@ export const addArrangement = (title, composer) => async (dispatch, getState) =>
         dispatch({type: 'ARRANGEMENT_ADD_FAILURE'});
     }
 };
+
+export const addSetlist = (title, date) => async (dispatch, getState) => {
+    let userId = getState().default.user.id;
+    let bandId = getState().default.router.pathname.split('/')[2];
+    try {
+        const setlist = {
+            title: title,
+            date: date,
+            creator: firebase.firestore().doc(`users/${userId}`)
+        };
+
+        let ref = await firebase.firestore().collection('setlists').add(setlist);
+        await firebase.firestore().collection(`bands/${bandId}/setlists`).add({ref: firebase.firestore().doc(`setlists/${ref.id}`)});
+
+        dispatch({type: 'SETLIST_ADD_SUCCESS', setlist: {id: ref.id, ...setlist}});
+    } catch (err) {
+        dispatch({type: 'SETLIST_ADD_FAILURE'});
+    }
+}
 
 
 export const getBandDetail = bandId => async dispatch => {
@@ -92,6 +112,7 @@ class Band extends Component {
         anchorEl: null,
         arrangementDialogOpen: false,
         setlistDialogOpen: false,
+        setlistDate: '',
         arrangementTitle: '',
         arrangementComposer: '',
         setlistName: ''
@@ -155,7 +176,7 @@ class Band extends Component {
     }
 
     render() {
-        const {anchorEl, arrangementDialogOpen} = this.state;
+        const {anchorEl, arrangementDialogOpen, setlistDialogOpen, setlistDate} = this.state;
         const {classes, band={arrangements: []}} = this.props;
 
         return (
@@ -218,6 +239,24 @@ class Band extends Component {
                     <DialogActions>
                         <Button color="primary" onClick={() => this._onDialogClose('arrangement')}>Cancel</Button>
                         <Button color="primary" onClick={() => this._onDialogSubmit('arrangement')} autoFocus>Create</Button>
+                    </DialogActions>
+                </Dialog>
+                <Dialog open={setlistDialogOpen} onClose={() => this._onDialogClose('arrangement')}>
+                    <DialogTitle>Create Band</DialogTitle>
+                    <DialogContent className={classes.dialogContent}>
+                        <TextField
+                            label="Title"
+                            margin="normal"
+                            onChange={e => this.setState({setlistTitle: e.target.value})}
+                        />
+                        <DatePicker
+                            value={setlistDate}
+                            onChange={date => this.setState({setlistDate: date})}
+                        />
+                    </DialogContent>
+                    <DialogActions>
+                        <Button color="primary" onClick={() => this._onDialogClose('setlist')}>Cancel</Button>
+                        <Button color="primary" onClick={() => this._onDialogSubmit('setlist')} autoFocus>Create</Button>
                     </DialogActions>
                 </Dialog>
             </div>
