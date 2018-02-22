@@ -12,12 +12,12 @@ import {
     Snackbar,
     TextField
 } from "material-ui";
+
 import {DatePicker} from 'material-ui-pickers';
 import AddIcon from 'material-ui-icons/Add';
 import MenuIcon from 'material-ui-icons/Menu';
 
 import Selectable from '../components/Selectable'
-
 import firebase from 'firebase';
 
 // Creating Action creators.
@@ -94,6 +94,7 @@ const styles = {
 };
 
 class Setlist extends Component {
+
     state = {
         anchorEl: null,
         addArrDialogOpen: false,
@@ -105,6 +106,7 @@ class Setlist extends Component {
     requestBandDetails(){
         let bandId = this.props.pathname.split('/')[2];
         this.props.dispatch(getBandDetail(bandId));
+
     }
 
 

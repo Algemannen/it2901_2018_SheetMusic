@@ -42,6 +42,7 @@ export const addArrangement = (title, composer) => async (dispatch, getState) =>
 export const addSetlist = (title, date) => async (dispatch, getState) => {
     let userId = getState().default.user.id;
     let bandId = getState().router.location.pathname.split('/')[2];
+
     try {
         const setlist = {
             title: title,
@@ -184,6 +185,7 @@ class Band extends Component {
 
     render() {
         const {anchorEl, arrangementDialogOpen, setlistDialogOpen, setlistDate} = this.state;
+
         const {classes, band={arrangements: [], setlists: []}} = this.props;
 
         //Done for testing purposes, need to find new way of doing it...
@@ -260,7 +262,7 @@ class Band extends Component {
                         />
                         <DatePicker
                             value={setlistDate}
-                            onChange={date => {this.setState({setlistDate: date._d}); console.log(date)} }
+                            onChange={date => {this.setState({setlistDate: date._d})} }
                         />
                     </DialogContent>
                     <DialogActions>
