@@ -25,9 +25,9 @@ import firebase from 'firebase';
 export const updateSetListArrangements = (setlistid, arrIds, currLength) => async dispatch => {
     let doc = await firebase.firestore().doc(`setlists/${setlistid}`);
 
-    for(let i = 0; i < arrIds.length; i++){
-        await firebase.firestore().collection(`setlists/${setlistid}/arrangements`).add({order: i, ref: firebase.firestore().doc(`arrangements/${arrIds[i]}`)});
-    }
+    let promise = await Promise.all(arrIds.map(async (arr, index) =>
+        await firebase.firestore().collection(`setlists/${setlistid}/arrangements`).add({order: currLength + index, ref: firebase.firestore().doc(`arrangements/${arrIds[index]}`)})));
+    
 }
 export const getSetListDetail = setlistID => async dispatch=> {
     let doc = await firebase.firestore().doc(`setlists/${setlistID}`).get();
@@ -38,7 +38,7 @@ export const getSetListDetail = setlistID => async dispatch=> {
 
     setlist.arrangements = await Promise.all(snapshot.docs.map(async doc => {
         const arrDoc = await doc.data().ref.get();
-        return {id: arrDoc.id, position:doc.data().order, ...arrDoc.data()};
+        return {id: arrDoc.id, order:doc.data().order, ...arrDoc.data()};
     }));
 
     dispatch({type: 'SETLIST_FETCH_RESPONSE', setlist: setlist});
@@ -148,7 +148,7 @@ class Setlist extends Component {
             case 'addArr':
                 // Look at this glorious piece of code! I am a GOD! (I might have gone slightly mad during the night...)
                 let selectedArrangementIDs = this.state.addedArrangementsIds;
-                selectedArrangementIDs.push.apply(selectedArrangementIDs,  this.state.arrangements.filter(arr => arr.selected).map((arr) => arr.id));
+                selectedArrangementIDs.push(...this.state.arrangements.filter(arr => arr.selected).map((arr) => arr.id));
                 let setlistid = this.props.pathname.split('/')[3];
                 this.setState({addedArrangementsIds:selectedArrangementIDs, addArrDialogOpen:false});
                 this.props.dispatch(updateSetListArrangements(setlistid, selectedArrangementIDs, this.props.setlist.arrangements.length));
@@ -188,10 +188,9 @@ class Setlist extends Component {
                     </Toolbar>
                 </AppBar>
                 <div>
-                    <div>{setlist.arrangements.map((arr, id) => 
-                    <div key={id} order={arr.position}>
-                        {console.log(arr)}
-                        {arr.position}. {arr.title}
+                    <div>{setlist.arrangements.sort((a, b) => a.order - b.order).map((arr, id) => 
+                    <div key={id}>
+                        {arr.order}. {arr.title}
                     </div>)}
                     </div>
                 </div>
