@@ -21,15 +21,6 @@ import Selectable from '../components/Selectable'
 import firebase from 'firebase';
 
 // Creating Action creators.
-const fetchBandArrangments = (bandId) => async dispatch => {
-    let snapshot =  await firebase.firestore().collection(`bands/${bandId}/arrangements`).get();
-    let recieved_arrangements = snapshot.docs.map(async doc => {
-        const arrDoc = await doc.data.ref.get();
-        return {id: arrDoc.id, ...arrDoc.data()};
-    });
-
-    //return {type:"BAND_ARRANGEMENTS_FETCH_RESPONSE", arrangements: recieved_arrangements};
-}
 
 export const updateSetListArrangements = (setlistid, arrIds) => async dispatch => {
     console.log("test")
@@ -40,6 +31,12 @@ export const updateSetListArrangements = (setlistid, arrIds) => async dispatch =
         console.log("Update Successful!");
     })
 }
+
+export const getSetListDetail = setlistID => async dispatch=> {
+    let doc = await firebase.firestore().doc(`setlists/${setlistID}`).get();
+    dispatch({type: 'SETLIST_FETCH_RESPONSE', setlist:{id: doc.id, ...doc.data()}});
+}
+
 
 export const getBandDetail = bandId => async dispatch => {
     let doc = await firebase.firestore().doc(`bands/${bandId}`).get();
@@ -106,13 +103,16 @@ class Setlist extends Component {
     requestBandDetails(){
         let bandId = this.props.pathname.split('/')[2];
         this.props.dispatch(getBandDetail(bandId));
-
+    }
+    
+    requestSetListData(){
+        let setlistID = this.props.pathname.split('/')[3];
+        this.props.dispatch(getSetListDetail(setlistID))
     }
 
-
     componentWillMount() {
-        console.log(this.props);
         this.requestBandDetails();
+        this.requestSetListData();
     }
     _onDialogClose(type) {
         this.setState({[`${type}DialogOpen`]: false});
@@ -137,7 +137,6 @@ class Setlist extends Component {
     }
 
     _onDialogSubmit(type){
-        console.log(type)
         switch(type){
             case 'addArr':
                 // Look at this glorious piece of code! I am a GOD! (I might have gone slightly mad during the night...)
@@ -158,7 +157,7 @@ class Setlist extends Component {
     }
     render() {
         const { anchorEl, addArrDialogOpen, addPauseDialogOpen} = this.state;
-        const {classes, band={arrangements:[]}} = this.props;
+        const {classes, band={arrangements:[]}, setlist={arrangements:[]}} = this.props;
         return (
             <div className={classes.root}>
                 <AppBar position="static">
@@ -183,7 +182,7 @@ class Setlist extends Component {
                     </Toolbar>
                 </AppBar>
                 <div>
-                    <div></div>
+                    <div>{setlist.arrangements.map((arr, index) => <div> {arr} </div> )}</div>
                 </div>
                 <Dialog open={addArrDialogOpen} onClose={() => this._onDialogClose('addArr')}>
                     <DialogTitle>Add Arrangment</DialogTitle>
@@ -214,7 +213,7 @@ class Setlist extends Component {
                     </DialogContent>
                     <DialogActions>
                         <Button color="primary" onClick={() => this._onDialogClose('addPause')}>Cancel</Button>
-                        <Button color="primary" onClick={() => this._onDialogSubmit('addPause')} autoFocus>Join</Button>
+                        <Button color="primary" onClick={() => this._onDialogSubmit('addPause')} autoFocus>Add</Button>
                     </DialogActions>
                 </Dialog>
             </div>
@@ -228,6 +227,7 @@ class Setlist extends Component {
 export default compose(connect(state => ({
     user: state.default.user,
     band:state.default.band,
+    setlist:state.default.setlist,
     pathname: state.router.location.pathname
 })), withStyles(styles))(Setlist);
 

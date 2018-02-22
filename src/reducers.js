@@ -24,6 +24,10 @@ export default (state = {}, action) => {
             return {...state, band: {...state.band, arrangements: [...state.band.arrangements, action.arrangement]}};
         case 'SETLIST_ADD_SUCCESS':
             return {...state, band: {...state.band, setlists: [...state.band.setlists, action.setlist]}};
+        case 'SETLIST_ADD_ARRANGEMENT_SUCCSESSFUL':
+            break;
+        case 'SETLIST_FETCH_RESPONSE':
+            return {...state, setlist: action.setlist}
         case 'MESSAGE_SHOW':
             return {...state, message: action.message};
         case 'MESSAGE_HIDE':
