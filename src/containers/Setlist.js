@@ -22,19 +22,26 @@ import firebase from 'firebase';
 
 // Creating Action creators.
 
-export const updateSetListArrangements = (setlistid, arrIds) => async dispatch => {
-    console.log("test")
+export const updateSetListArrangements = (setlistid, arrIds, currLength) => async dispatch => {
     let doc = await firebase.firestore().doc(`setlists/${setlistid}`);
-    doc.update({
-        arrangements:arrIds
-    }).then(function(){
-        console.log("Update Successful!");
-    })
-}
 
+    for(let i = 0; i < arrIds.length; i++){
+        await firebase.firestore().collection(`setlists/${setlistid}/arrangements`).add({order: i, ref: firebase.firestore().doc(`arrangements/${arrIds[i]}`)});
+    }
+}
 export const getSetListDetail = setlistID => async dispatch=> {
     let doc = await firebase.firestore().doc(`setlists/${setlistID}`).get();
-    dispatch({type: 'SETLIST_FETCH_RESPONSE', setlist:{id: doc.id, ...doc.data()}});
+
+    let setlist = doc.data();
+
+    let snapshot = await firebase.firestore().collection(`setlists/${setlistID}/arrangements`).get();
+
+    setlist.arrangements = await Promise.all(snapshot.docs.map(async doc => {
+        const arrDoc = await doc.data().ref.get();
+        return {id: arrDoc.id, position:doc.data().order, ...arrDoc.data()};
+    }));
+
+    dispatch({type: 'SETLIST_FETCH_RESPONSE', setlist: setlist});
 }
 
 
@@ -143,9 +150,8 @@ class Setlist extends Component {
                 let selectedArrangementIDs = this.state.addedArrangementsIds;
                 selectedArrangementIDs.push.apply(selectedArrangementIDs,  this.state.arrangements.filter(arr => arr.selected).map((arr) => arr.id));
                 let setlistid = this.props.pathname.split('/')[3];
-                console.log(setlistid);
                 this.setState({addedArrangementsIds:selectedArrangementIDs, addArrDialogOpen:false});
-                this.props.dispatch(updateSetListArrangements(setlistid, selectedArrangementIDs));
+                this.props.dispatch(updateSetListArrangements(setlistid, selectedArrangementIDs, this.props.setlist.arrangements.length));
                 break;
             case 'addPause':
                 break;
@@ -165,8 +171,8 @@ class Setlist extends Component {
                         <IconButton color="inherit" onClick={() => this._onMenuButtonClick()}>
                             <MenuIcon/>
                         </IconButton>
-                        <Typography variant="title" color="inherit">
-                            Setlist
+                        <Typography variant="title" color="inherit" className={classes.flex}>
+                            {setlist.title}
                         </Typography>
                         <IconButton color="inherit" aria-label="Menu" onClick={e => this._onAddButtonClick(e)}>
                             <AddIcon/>
@@ -182,7 +188,12 @@ class Setlist extends Component {
                     </Toolbar>
                 </AppBar>
                 <div>
-                    <div>{setlist.arrangements.map((arr, index) => <div> {arr} </div> )}</div>
+                    <div>{setlist.arrangements.map((arr, id) => 
+                    <div key={id} order={arr.position}>
+                        {console.log(arr)}
+                        {arr.position}. {arr.title}
+                    </div>)}
+                    </div>
                 </div>
                 <Dialog open={addArrDialogOpen} onClose={() => this._onDialogClose('addArr')}>
                     <DialogTitle>Add Arrangment</DialogTitle>
