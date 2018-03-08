@@ -66,17 +66,20 @@ const styles = {
     searchField: {
       width: 300,
       color: 'rgb(255,255,255)',
-      paddingRight: '300px'
+      flex: 1,
+      paddingRight: 250,
     },
     formControl: {
     margin: '5px',
-    paddingLeft: '100px'
+    width: 300,
   },
   inputLabelFocused: {
     color: 'rgb(255,255,255)',
   },
   inputUnderline: {
-    backgroundColor: 'rgb(255,255,255)'
+    backgroundColor: 'rgb(255,255,255)',
+    color: 'rgb(255,255,255)',
+    width: 300,
   },
   inputUnderline: {
     '&:after': {
@@ -85,8 +88,8 @@ const styles = {
   },
   textFieldRoot: {
     padding: 0,
+    width: 300,
     backgroundColor: 'rgb(255,255,255)',
-    paddingRight: '100px',
     'label + &': {
       marginTop: '5px',
     },
@@ -312,29 +315,34 @@ class Band extends Component {
                         <Typography variant="title" color="inherit" className={classes.flex}>
                             {band.name}
                         </Typography>
-                        {/* <FormControl className={classes.formControl}>
-                          <InputLabel
-                            FormControlClasses={{
-                              focused: classes.inputLabelFocused,
-                            }}
-                            htmlFor="custom-color-input"
-                          >
-                            Search
-                          </InputLabel>
-                          <Input
-                            classes={{
-                              underline: classes.inputUnderline,
-                            }}
-                            id="custom-color-input"
-                          />
-                        </FormControl> */}
-                        <TextField
+                        <div className={classes.searchField}>
+                          <FormControl className={classes.formControl}>
+                            <InputLabel
+                              FormControlClasses={{
+                                focused: classes.inputLabelFocused,
+                              }}
+                              htmlFor="custom-color-input"
+                              >
+                                Search
+                              </InputLabel>
+                              <Input
+                                classes={{
+                                  underline: classes.inputUnderline,
+                                }}
+                                id="custom-color-input"
+                                value={this.state.search}
+                                onChange={this.searchUpdate.bind(this)}
+                              />
+                            </FormControl>
+
+                        </div>
+                        {/* <TextField
                           label="Search"
                           type="search"
                           margin="normal"
                           value={this.state.search}
                           className={classes.searchField}
-                          onChange={this.searchUpdate.bind(this)}/>
+                          onChange={this.searchUpdate.bind(this)}/> */}
                         <IconButton color="inherit" onClick={() => this._onFileUploadButtonClick()}>
                             <FileUploadIcon/>
                         </IconButton>
