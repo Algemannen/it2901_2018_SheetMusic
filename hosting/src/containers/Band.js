@@ -7,8 +7,10 @@ import Typography from 'material-ui/Typography';
 
 import {
     Avatar, Card, CardContent, CardMedia, IconButton, List, ListItem, ListItemText, Menu, MenuItem, Paper, Tab,
-    Tabs,
+    Tabs, TextField,
 } from "material-ui";
+import Input, {InputLabel} from 'material-ui/Input';
+import {FormControl} from 'material-ui/Form';
 import AddIcon from 'material-ui-icons/Add';
 import MenuIcon from 'material-ui-icons/Menu';
 import FileUploadIcon from 'material-ui-icons/FileUpload';
@@ -20,6 +22,7 @@ import UploadSheetsDialog from "../components/explorer/UploadSheetsDialog";
 import AddInstrumentDialog from "../components/dialogs/AddInstrumentDialog";
 
 import Drawer from '../components/Drawer.js';
+
 
 const styles = {
     root: {},
@@ -58,7 +61,36 @@ const styles = {
         display: 'flex',
         paddingTop: 20,
         justifyContent: 'center'
-    }
+    },
+
+    searchField: {
+      width: 300,
+      color: 'rgb(255,255,255)',
+      paddingRight: '300px'
+    },
+    formControl: {
+    margin: '5px',
+    paddingLeft: '100px'
+  },
+  inputLabelFocused: {
+    color: 'rgb(255,255,255)',
+  },
+  inputUnderline: {
+    backgroundColor: 'rgb(255,255,255)'
+  },
+  inputUnderline: {
+    '&:after': {
+      backgroundColor: 'rgb(255,255,255)',
+    },
+  },
+  textFieldRoot: {
+    padding: 0,
+    backgroundColor: 'rgb(255,255,255)',
+    paddingRight: '100px',
+    'label + &': {
+      marginTop: '5px',
+    },
+  },
 };
 
 class Band extends Component {
@@ -66,7 +98,9 @@ class Band extends Component {
         anchorEl: null,
         selectedPage: 1,
         band: {scores: []},
-        uploadSheetsDialogOpen: false
+        uploadSheetsDialogOpen: false,
+        search: '',
+        filterResult: {scores: []},
     };
 
     unsubscribeCallbacks = [];
@@ -246,10 +280,29 @@ class Band extends Component {
         await sheetMusicRef.update({sheets: sheets});
     };
 
+    searchUpdate(event){
+      this.setState({
+        search: event.target.value
+      });
+    };
+
     render() {
         const {anchorEl, selectedPage, band, uploadSheetsDialogOpen} = this.state;
 
         const {classes} = this.props;
+
+        let filteredScores = [];
+
+        if (this.state.band.scores !== undefined) {
+          filteredScores = this.state.band.scores.filter(
+            (score) => {
+              if (score.title.toLowerCase().indexOf(this.state.search.toLowerCase()) !== -1 ||
+                  score.composer.toLowerCase().indexOf(this.state.search.toLowerCase()) !== -1) {
+                return score;
+              }
+            }
+          )
+        }
 
         return (
             <div className={classes.root}>
@@ -259,6 +312,29 @@ class Band extends Component {
                         <Typography variant="title" color="inherit" className={classes.flex}>
                             {band.name}
                         </Typography>
+                        {/* <FormControl className={classes.formControl}>
+                          <InputLabel
+                            FormControlClasses={{
+                              focused: classes.inputLabelFocused,
+                            }}
+                            htmlFor="custom-color-input"
+                          >
+                            Search
+                          </InputLabel>
+                          <Input
+                            classes={{
+                              underline: classes.inputUnderline,
+                            }}
+                            id="custom-color-input"
+                          />
+                        </FormControl> */}
+                        <TextField
+                          label="Search"
+                          type="search"
+                          margin="normal"
+                          value={this.state.search}
+                          className={classes.searchField}
+                          onChange={this.searchUpdate.bind(this)}/>
                         <IconButton color="inherit" onClick={() => this._onFileUploadButtonClick()}>
                             <FileUploadIcon/>
                         </IconButton>
@@ -296,7 +372,8 @@ class Band extends Component {
                             case 1:
                                 return <div className={classes.pageContainer}>
                                     <div style={{display: 'flex', width: 600, flexWrap: 'wrap'}}>
-                                        {band.scores && band.scores.map((arr, index) =>
+
+                                        {filteredScores && filteredScores.map((arr, index) =>
                                             <Card key={index} className={classes.card}
                                                   onClick={() => window.location.hash = `#/score/${arr.id}`}
                                                   elevation={1}>

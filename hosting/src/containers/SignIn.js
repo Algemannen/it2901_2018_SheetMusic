@@ -129,7 +129,7 @@ class SignIn extends Component {
                     <iframe
                         className={classes.iframe}
                         src="https://www.youtube.com/embed/ImBqC-rGpX8?start=13&end=74&controls=0&showinfo=0&rel=0&autoplay=1&mute=1&loop=1&playlist=ImBqC-rGpX8"
-                        frameborder="0" allowfullscreen/>
+                        frameBorder="0" allowFullScreen/>
                     <div className={classes.overlay}>
                         <div className={classes.overlayContainer}>
                             <Typography variant='display4' className={classes.title}>ScoreButler</Typography>
