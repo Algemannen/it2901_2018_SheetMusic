@@ -4,13 +4,14 @@ import { withStyles } from 'material-ui/styles';
 import MenuIcon from 'material-ui-icons/Menu';
 import Divider from 'material-ui/Divider';
 import GroupIcon from 'material-ui-icons/Group';
-import DraftsIcon from 'material-ui-icons/Drafts';
 import AccountCircleIcon from 'material-ui-icons/AccountCircle';
 import { ListItem, ListItemIcon, ListItemText } from 'material-ui/List';
 import {
   Drawer, List, IconButton
 } from 'material-ui';
 import Button from 'material-ui/Button';
+import CreateBandDialog from "../components/dialogs/CreateBandDialog";
+import JoinBandDialog from "../components/dialogs/JoinBandDialog";
 
 const styles = theme => ({
   root: {
@@ -58,10 +59,13 @@ class SideDrawer extends React.Component {
 
   render() {
     const { classes, bands } = this.props;
+
+    console.log(this.props);
+
     return (
       <div>
       <IconButton color='default' onClick={this.toggleDrawer('left', true)}>
-          <MenuIcon style={{color: 'white'}}/>
+        <MenuIcon style={{color: 'white'}}/>
       </IconButton>
         <Drawer open={this.state.left} onClose={this.toggleDrawer('left', false)}>
           <div
@@ -79,10 +83,10 @@ class SideDrawer extends React.Component {
                   <ListItemText primary='Profile name' />
                 </ListItem>
               <div className={classes.joincreate}>
-                <Button variant='raised' color='default' className={classes.button}>
+                <Button onClick={() => this.props.onJoinBand()} variant='raised' color='default' className={classes.button}>
                   Join band
                 </Button>
-                <Button variant='raised' color='default' className={classes.button}>
+                <Button onClick={() => this.props.onCreateBand()} variant='raised' color='default' className={classes.button}>
                   Create band
                 </Button>
               </div>

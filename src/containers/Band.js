@@ -18,6 +18,8 @@ import CreateSetlistDialog from "../components/dialogs/CreateSetlistDialog";
 import CreateScoreDialog from "../components/dialogs/CreateScoreDialog";
 import UploadSheetsDialog from "../components/explorer/UploadSheetsDialog";
 import AddInstrumentDialog from "../components/dialogs/AddInstrumentDialog";
+import CreateBandDialog from "../components/dialogs/CreateBandDialog";
+import JoinBandDialog from "../components/dialogs/JoinBandDialog";
 
 import Drawer from '../components/Drawer.js';
 
@@ -70,6 +72,10 @@ class Band extends Component {
     };
 
     unsubscribeCallbacks = [];
+
+    signOut() {
+      return firebase.auth().signOut();
+    }
 
     async componentWillMount() {
         const bandId = this.props.detail;
@@ -159,8 +165,58 @@ class Band extends Component {
         this.setState({anchorEl: null});
     }
 
-    _onMenuButtonClick() {
+    async createBand() {
+        const uid = this.props.user.uid;
 
+        this.setState({anchorEl: null})
+        const {name} = await this.createDialog.open();
+
+        try {
+            const band = {
+                name: name,
+                creator: firebase.firestore().doc(`users/${uid}`),
+                code: Math.random().toString(36).substring(2, 7)
+            };
+
+            let ref = await firebase.firestore().collection('bands').add(band);
+
+            const instrumentIds = (await firebase.firestore().collection('instruments').get()).docs.map(doc => doc.id);
+            await Promise.all(
+                instrumentIds.map(id =>
+                    ref.collection('instruments').add({ref: firebase.firestore().doc(`instruments/${id}`)}))
+            );
+
+            await firebase.firestore().collection(`users/${uid}/bands`).add({
+                ref: firebase.firestore().doc(`bands/${ref.id}`)
+            });
+            window.location.hash = `#/band/${ref.id}`;
+        } catch (err) {
+            console.log(err);
+        }
+    }
+    async joinBand() {
+        const uid = this.props.user.uid;
+
+        this.setState({anchorEl: null});
+        const {code} = await this.joinDialog.open();
+
+        let bandSnapshot = await firebase.firestore().collection('bands').where('code', '==', code).get();
+
+        if (bandSnapshot.docs.length > 0) {
+            let docRef = firebase.firestore().doc(`bands/${bandSnapshot.docs[0].id}`);
+
+            let userBandSnapshot = await firebase.firestore().collection(`users/${uid}/bands`).where('ref', '==', docRef).get();
+
+            if (userBandSnapshot.docs.length > 0) {
+                this.setState({message: 'Band already joined!'});
+            } else {
+                await firebase.firestore().collection(`users/${uid}/bands`).add({ref: docRef});
+                await docRef.collection('members').add({ref: firebase.firestore().doc(`users/${uid}`)});
+                window.location.hash = `#/band/${docRef.id}`;
+            }
+          } else {
+              this.setState({message: 'Band does not exist!'});
+          }
     }
 
     async _onAddScore() {
@@ -232,7 +288,7 @@ class Band extends Component {
         );
 
         await sheetMusicRef.update({
-            uploading: firebase.firestore.FieldValue.delete(),
+            uploading: firebase.firestore.FieldValue.delete(),(
             sheets: taskSnapshots.map(snap => snap.downloadURL)
         });
     };
@@ -248,14 +304,20 @@ class Band extends Component {
 
     render() {
         const {anchorEl, selectedPage, band, uploadSheetsDialogOpen} = this.state;
-
+        console.log(this.props);
         const {classes} = this.props;
 
         return (
             <div className={classes.root}>
                 <AppBar position="fixed" className={classes.appBar}>
                     <Toolbar>
-                        <Drawer onSignOut={() => this.signOut()} bands={this.state.bands}/>
+                        <Drawer
+                          onCreateBand={() => {console.log('create band')}}
+                          onJoinBand={() => {console.log('join band')}}
+                          onSignOutt={() => {console.log('sign out')}}
+                          bands={this.state.bands}
+
+                        />
                         <Typography variant="title" color="inherit" className={classes.flex}>
                             {band.name}
                         </Typography>
@@ -353,6 +415,8 @@ class Band extends Component {
                 </div>
                 <CreateScoreDialog onRef={ref => this.scoreDialog = ref}/>
                 <CreateSetlistDialog onRef={ref => this.setlistDialog = ref}/>
+                <CreateBandDialog onRef={ref => this.createDialog = ref}/>
+                <JoinBandDialog onRef={ref => this.joinDialog = ref}/>
                 <AddInstrumentDialog
                     band={band}
                     onRef={ref => this.addInstrumentDialog = ref}
