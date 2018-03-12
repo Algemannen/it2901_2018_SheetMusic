@@ -288,7 +288,7 @@ class Band extends Component {
         );
 
         await sheetMusicRef.update({
-            uploading: firebase.firestore.FieldValue.delete(),(
+            uploading: firebase.firestore.FieldValue.delete(),
             sheets: taskSnapshots.map(snap => snap.downloadURL)
         });
     };
@@ -304,7 +304,6 @@ class Band extends Component {
 
     render() {
         const {anchorEl, selectedPage, band, uploadSheetsDialogOpen} = this.state;
-        console.log(this.props);
         const {classes} = this.props;
 
         return (
@@ -312,12 +311,11 @@ class Band extends Component {
                 <AppBar position="fixed" className={classes.appBar}>
                     <Toolbar>
                         <Drawer
-                          onCreateBand={() => {console.log('create band')}}
-                          onJoinBand={() => {console.log('join band')}}
-                          onSignOutt={() => {console.log('sign out')}}
+                          onCreateBand={() => this.createBand()}
+                          onJoinBand={() => this.joinBand()}
+                          onSignOut={() => this.signOut()}
+                          />
                           bands={this.state.bands}
-
-                        />
                         <Typography variant="title" color="inherit" className={classes.flex}>
                             {band.name}
                         </Typography>
