@@ -15,6 +15,8 @@ import AddIcon from 'material-ui-icons/Add';
 import MenuIcon from 'material-ui-icons/Menu';
 import FileUploadIcon from 'material-ui-icons/FileUpload';
 
+import fuzzyFilterFactory from 'react-fuzzy-filter';
+
 import firebase from 'firebase';
 import CreateSetlistDialog from "../components/dialogs/CreateSetlistDialog";
 import CreateScoreDialog from "../components/dialogs/CreateScoreDialog";
@@ -23,6 +25,7 @@ import AddInstrumentDialog from "../components/dialogs/AddInstrumentDialog";
 
 import Drawer from '../components/Drawer.js';
 
+const {InputFilter, FilterResults} = fuzzyFilterFactory;
 
 const styles = {
     root: {},
@@ -294,6 +297,10 @@ class Band extends Component {
 
         const {classes} = this.props;
 
+        const fuseConfig = {
+            keys: ['title', 'composer']
+        }
+
         let filteredScores = [];
 
         if (this.state.band.scores !== undefined) {
@@ -315,6 +322,7 @@ class Band extends Component {
                         <Typography variant="title" color="inherit" className={classes.flex}>
                             {band.name}
                         </Typography>
+                        <InputFilter debounceTime={200} />
                         <div className={classes.searchField}>
                           <FormControl className={classes.formControl}>
                             <InputLabel
